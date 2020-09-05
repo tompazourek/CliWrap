@@ -188,6 +188,58 @@ namespace CliWrap.Tests
             // Assert
             buffer.ToString().TrimEnd().Should().Be(expectedOutput);
         }
+        
+        [Fact(Timeout = 15000)]
+        public async Task bug_happens_with_merge()
+        {
+            // Arrange
+            string expectedOutput = new string('\u2764', 10_000);
+            var stringBuilder = new StringBuilder();
+
+            // just so we have a different target to merge, not really used
+            await using var memoryStream = new MemoryStream();
+
+            var pipeTarget = PipeTarget.Merge(
+                PipeTarget.ToStringBuilder(stringBuilder, Encoding.UTF8),
+                PipeTarget.ToStream(memoryStream)
+            );
+
+            var cmd = Cli.Wrap("dotnet")
+                .WithArguments(a => a
+                    .Add(Dummy.Program.FilePath)
+                    .Add(Dummy.Program.PrintUtf8Hearts)
+                    .Add(expectedOutput)) | pipeTarget;
+
+            // Act
+            await cmd.ExecuteAsync();
+
+            // Assert
+            stringBuilder.ToString().TrimEnd().Should().Be(expectedOutput);
+        }
+
+        [Fact(Timeout = 15000)]
+        public async Task bug_doesnt_happen_without_merge()
+        {
+            // Arrange
+            string expectedOutput = new string('\u2764', 10_000);
+            var stringBuilder = new StringBuilder();
+
+            await using var memoryStream = new MemoryStream();
+
+            var pipeTarget = PipeTarget.ToStringBuilder(stringBuilder, Encoding.UTF8);
+
+            var cmd = Cli.Wrap("dotnet")
+                .WithArguments(a => a
+                    .Add(Dummy.Program.FilePath)
+                    .Add(Dummy.Program.PrintUtf8Hearts)
+                    .Add(expectedOutput)) | pipeTarget;
+
+            // Act
+            await cmd.ExecuteAsync();
+
+            // Assert
+            stringBuilder.ToString().TrimEnd().Should().Be(expectedOutput);
+        }
 
         [Fact(Timeout = 15000)]
         public async Task I_can_execute_a_command_that_pipes_its_stdout_into_a_delegate()

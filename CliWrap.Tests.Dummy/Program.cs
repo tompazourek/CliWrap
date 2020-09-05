@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using CliWrap.Tests.Dummy.Internal;
 
@@ -35,6 +36,8 @@ namespace CliWrap.Tests.Dummy
         public const string PrintEnvVars = nameof(PrintEnvVars);
 
         public const string PrintRandomText = nameof(PrintRandomText);
+
+        public const string PrintUtf8Hearts = nameof(PrintUtf8Hearts);
 
         public const string PrintRandomLines = nameof(PrintRandomLines);
 
@@ -177,6 +180,13 @@ namespace CliWrap.Tests.Dummy
                         Console.Error.WriteLine(Random.NextString(5000));
                     }
 
+                    return 0;
+                },
+                
+                [PrintUtf8Hearts] = args =>
+                {
+                    Console.OutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+                    Console.Write(new string('\u2764', 10_000)); // 10,000 hearts, 3 bytes each in UTF-8
                     return 0;
                 },
 
